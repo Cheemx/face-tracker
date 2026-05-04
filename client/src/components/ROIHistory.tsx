@@ -64,7 +64,7 @@ function ROIHistory(){
               {data.map((record: ROIRecord) => (
                 <tr
                   key={record.id}
-                  className="hover:bg-slate-800/40 transition-colors duration-100"
+                  className="hover:bg-slate-800/60 transition-colors duration-100 p-1 rounded-xl bg-slate-900/80"
                 >
                   <td className="px-4 py-2.5 text-slate-400 font-mono text-xs">
                     {formatTimestamp(record.timestamp)}
