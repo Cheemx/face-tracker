@@ -3,7 +3,11 @@ import logging.config
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 
+from app.models import roi
+
+from app.api import roi as roi_router
 from app.db.database import Base, engine
 
 LOGGING_CONFIG = {
@@ -30,10 +34,18 @@ LOGGING_CONFIG = {
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger(__name__)
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Creating database tables if they do not exist...")
+    Base.metadata.create_all(bind=engine)
+    logger.info("Database ready.")
+    yield
+
 app = FastAPI(
     title="Face Tracker API",
     description="Real-time face detection via WebSocket",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -44,11 +56,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.on_event("startup")
-def on_startup():
-    logger.info("Creating database tables if they do not exist...")
-    Base.metadata.create_all(bind=engine)
-    logger.info("Database ready.")
+app.include_router(roi_router.router)
 
 @app.get("/")
 async def root():
