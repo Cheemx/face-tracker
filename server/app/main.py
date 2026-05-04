@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from app.models import roi
 
 from app.api import roi as roi_router
+from app.api import websocket as ws_router
 from app.db.database import Base, engine
 
 LOGGING_CONFIG = {
@@ -50,12 +51,13 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+app.include_router(ws_router.router)
 app.include_router(roi_router.router)
 
 @app.get("/")
