@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: face-tracker-postgres
+    restart: always
+    environment: 
+      POSTGRES_USER: tracker
+      POSTGRES_PASSWORD: tracker
+      POSTGRES_DB: tracker
+    ports: 
+      - "5434:5432"
+    volumes:
+      - tracker_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tracker"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: 
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: face-tracker-server
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URI: postgresql://tracker:tracker@postgres:5432/tracker?sslmode=disable
+    ports: 
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: face-tracker-client
+    depends_on:
+      backend:
+        condition: service_started
+    environment:
+      VITE_API_URL: http://backend:8000
+    ports:
+      - "5173:5173"
+
+volumes:
+  tracker_data:
